@@ -2,8 +2,7 @@ import streamlit as st
 import numpy as np
 import pickle
 import os
-
-port = int(os.environ.get("PORT", 8501))
+port = os.environ.get("PORT", 8501)
 
 
 
@@ -101,7 +100,7 @@ if page == "home":
 
 elif page == "recommend":
     st.header("✨ Book Recommendation")
-    book_name = st.text_input("Type Your Book Name")
+    book_name = st.selectbox("Type Your Book Name",options=Book_title)
     
     if st.button("Recommend"):
         if book_name in pt.index:
