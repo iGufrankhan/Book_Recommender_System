@@ -2,26 +2,27 @@ import streamlit as st
 import numpy as np
 import pickle
 import os
-port = os.environ.get("PORT", 8501)
 
+st.set_page_config(page_title="Book Recommender", page_icon="📚", layout="wide")
 
+if "page" not in st.session_state:
+    st.session_state["page"] = "home"
 
-# Load data
-popular_df = pickle.load(open('popular_df.pkl', 'rb'))
-pt = pickle.load(open('pt.pkl', 'rb'))
-books = pickle.load(open('books.pkl', 'rb'))
-similarity_scores = pickle.load(open('similarity_scores.pkl', 'rb'))
+try:
+    popular_df = pickle.load(open('popular_df.pkl', 'rb'))
+    pt = pickle.load(open('pt.pkl', 'rb'))
+    books = pickle.load(open('books.pkl', 'rb'))
+    similarity_scores = pickle.load(open('similarity_scores.pkl', 'rb'))
+except FileNotFoundError:
+    st.error("❌ Required data files not found.")
+    st.stop()
 
-# Extract values
 Book_title  = list(popular_df['Book-Title'].values)
 Book_author = list(popular_df['Book-Author'].values)
 Image       = list(popular_df['Image-URL-M'].values)
 Votes       = list(popular_df['normal_rating'].values)
 Ratings     = list(popular_df['avg_rating'].values)
 
-
-
-# Header
 st.markdown("""
     <style>
         .fixed-header {
@@ -58,16 +59,6 @@ if col2.button("✨ Recommend"):
 if col3.button("📞 Contact"):
     st.session_state["page"] = "contact"
     page = "contact"
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
 if page == "home":
     st.header("📖 Top 50 Books")
@@ -90,32 +81,26 @@ if page == "home":
                         </div>
                     """, unsafe_allow_html=True)
 
-
-
-
-
-
-
-
-
 elif page == "recommend":
     st.header("✨ Book Recommendation")
-    book_name = st.selectbox("Type Your Book Name",options=Book_title)
-    
-    if st.button("Recommend"):
-        if book_name in pt.index:
-            index = np.where(pt.index == book_name)[0][0]
+    book_name = st.selectbox("📚 Type Your Book Name", options=Book_title, index=0)
+
+    if st.button("🔍 Recommend"):
+        book_name_lower = book_name.strip().lower()
+        pt_index_lower = [title.lower() for title in pt.index]
+
+        if book_name_lower in pt_index_lower:
+            index = pt_index_lower.index(book_name_lower)
             similar_items = sorted(list(enumerate(similarity_scores[index])), key=lambda x: x[1], reverse=True)[1:6]
-            
             data = []
             for i in similar_items:
+                temp_df = books[books['Book-Title'].str.lower() == pt.index[i[0]].lower()]
                 item = []
-                temp_df = books[books['Book-Title'] == pt.index[i[0]]]
                 item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Title'].values))
                 item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Author'].values))
                 item.extend(list(temp_df.drop_duplicates('Book-Title')['Image-URL-M'].values))
                 data.append(item)
-                
+
             col = st.columns(5)
             for idx, book_details in enumerate(data):
                 image = book_details[-1]
@@ -132,14 +117,10 @@ elif page == "recommend":
                         </div>
                     """, unsafe_allow_html=True)
         else:
-            st.warning("❌ Spelling is incorrect or book not found. Please try a different book name.")
-
-                
-                
-                
+            st.warning("❌ Book not found. Please check the spelling or try a different title.")
 
 elif page == "contact":
-    st.header("📞 contact")
+    st.header("📞 Contact")
     st.write("For any queries, contact us at:")
     st.write("📧 Email: gufrankhankab123@gmail.com")
     st.write("📱 Phone: 8210783123")
