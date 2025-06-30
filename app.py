@@ -1,6 +1,11 @@
 import streamlit as st
 import numpy as np
 import pickle
+import os
+
+port = int(os.environ.get("PORT", 8501))
+
+
 
 # Load data
 popular_df = pickle.load(open('popular_df.pkl', 'rb'))
